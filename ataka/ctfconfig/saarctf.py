@@ -7,28 +7,30 @@ import requests
 import telnetlib
 import socket
 
+ATAKA_HOST = "10.2.0.25"
+
+RUNLOCAL_TARGETS = [
+    "10.32.1.2",
+]
+
 # Config for framework
 ROUND_TIME = 120
 
 # format: regex, group where group 0 means the whole regex
-FLAG_REGEX = r"SAAR\{[A-Za-z0-9-_]{32}\}", 0
+FLAG_REGEX = r"SAAR\{[A-Za-z0-9_-]{32}\}", 0
 
 FLAG_BATCHSIZE = 500
 
 FLAG_RATELIMIT = 0.5  # Wait in seconds between each call of submit_flags()
 
-START_TIME = 1653055201 # Fri May 20 2022 4:00:01 PM GMT+02:00 (Central European Summer Time)
-
+START_TIME = 1700312400 # Saturday, November 18, 2023 2:00:00 PM GMT+01:00
 # IPs that are always excluded from attacks.
-STATIC_EXCLUSIONS = set([])
+STATIC_EXCLUSIONS = {"10.32.91.2"}
 
-SUBMIT_DOM = 'submission.ctf.saarland'
+SUBMIT_DOM = '10.32.250.2'
 SUBMIT_PORT = 31337
 FLAGID_URL = 'https://scoreboard.ctf.saarland/attack.json'
-
-
-def get_services():
-    return ["backd00r", "bytewarden", "saarbahn", "saarcloud", "saarloop", "saarsecvv"]
+EDITION = 2023
 
 
 def get_targets():
@@ -42,14 +44,12 @@ def get_targets():
             service: [
                 {
                     'ip': ip,
-                    'extra': json.dumps([x for tick, flagids in ip_info.items() for x in flagids]),
+                    'extra': json.dumps(ip_info),
                 }
                 for ip, ip_info in service_info.items()
             ]
             for service, service_info in flag_ids.items()
         }
-
-        targets["saarcloud"] = [{"ip": team["ip"], "extra": ""} for team in teams if team["online"]]
 
         return targets
     except Exception as e:
