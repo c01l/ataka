@@ -71,6 +71,21 @@ services:
     env_file:
       - .env
 
+  dind:
+    image: docker:dind
+    privileged: true
+    command: [ "dockerd", "-H", "tcp://[::]:2375", "--tls=false" ]
+    expose:
+      - 2375
+      - 2376
+    networks:
+      - ataka
+    volumes:
+      - ${DATA_STORE}/shared:/data/shared:rw,z
+      - ${DATA_STORE}/exploits:/data/exploits:rw,z
+      - ${DATA_STORE}/persist:/data/persist:rw,z
+
+
   executor:
     image: openattackdefensetools/ataka-executor
     restart: always
@@ -79,14 +94,18 @@ services:
     build:
       context: ./
       dockerfile: ataka/executor/Dockerfile
+    environment:
+      DOCKER_HOST: tcp://dind:2375
+      DOCKER_TLS_VERIFY: 0
     volumes:
-      - /var/run/docker.sock:/run/docker.sock:rw
+      # - /var/run/docker.sock:/run/docker.sock:rw
       - ${DATA_STORE}/shared:/data/shared:rw,z
       - ${DATA_STORE}/exploits:/data/exploits:rw,z
       - ${DATA_STORE}/persist:/data/persist:rw,z
     security_opt:
       - label:disable
     depends_on:
+      - dind
       - postgres
       - rabbitmq
     hostname: ataka-executor

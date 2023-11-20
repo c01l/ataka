@@ -55,7 +55,7 @@ class JobExecution:
         self._docker = docker
         self._exploits = exploits
         self._channel = channel
-        self._data_store = os.environ["DATA_STORE"]
+        self._data_store = "/data"
 
     async def run(self):
         job = await self.fetch_job_from_database()
@@ -95,12 +95,12 @@ class JobExecution:
                             }
                         ],
                         "CapAdd": ["NET_RAW"],
-                        "NetworkMode": "container:ataka-exploit",
+                        # "NetworkMode": "container:ataka-exploit",
                         "CpusetCpus": os.environ.get('EXPLOIT_CPUSET', ''),
                     },
                 },
             )
-
+            print(f"Created container ataka-exploit-{exploit.docker_name}")
             await container_ref.start()
         except DockerError as exception:
             print(f"Got docker error for exploit {exploit.id} (service {exploit.service}) by {exploit.author}")
